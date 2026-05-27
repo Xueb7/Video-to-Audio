@@ -326,37 +326,84 @@
 
 <footer>基于 FFmpeg.wasm · 文件仅在您的浏览器内处理</footer>
 
-<script async src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.min.js"></script>
 <script>
 let FFmpeg, fetchFile, toBlobURL, ffmpeg;
 let ffmpegLoaded = false;
 let selectedFile  = null;
 let outputURL     = null;
 
-// 等待 FFmpeg 库加载完成
-function initFFmpeg() {
-  // 检查全局的 FFmpeg 对象
-  if (typeof FFmpeg === 'undefined' || !window.FFmpeg) {
-    console.log('⏳ 等待 FFmpeg 库加载...');
-    setTimeout(initFFmpeg, 200);
-    return;
-  }
+// 动态加载 FFmpeg 库
+function loadFFmpegLibrary() {
+  console.log('📥 正在加载 FFmpeg 库...');
 
+  return new Promise((resolve, reject) => {
+    // 尝试多个 CDN
+    const cdnUrls = [
+      'https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.min.js',
+      'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.min.js'
+    ];
+
+    let currentIndex = 0;
+
+    function tryLoadCDN() {
+      if (currentIndex >= cdnUrls.length) {
+        reject(new Error('所有 CDN 都无法加载'));
+        return;
+      }
+
+      const url = cdnUrls[currentIndex];
+      console.log(`尝试从 CDN 加载: ${url}`);
+
+      const script = document.createElement('script');
+      script.src = url;
+      script.onerror = () => {
+        console.log(`❌ 加载失败: ${url}`);
+        currentIndex++;
+        tryLoadCDN();
+      };
+      script.onload = () => {
+        console.log(`✅ 加载成功: ${url}`);
+        resolve();
+      };
+      document.head.appendChild(script);
+    }
+
+    tryLoadCDN();
+  });
+}
+
+// 初始化 FFmpeg
+async function initFFmpeg() {
   try {
+    await loadFFmpegLibrary();
+
+    // 等待 FFmpeg 对象可用
+    let attempts = 0;
+    while (!window.FFmpeg && attempts < 50) {
+      console.log('⏳ 等待 FFmpeg 对象初始化...');
+      await new Promise(r => setTimeout(r, 200));
+      attempts++;
+    }
+
+    if (!window.FFmpeg) {
+      throw new Error('FFmpeg 库加载后仍无法访问');
+    }
+
     FFmpeg = window.FFmpeg.FFmpeg;
     fetchFile = window.FFmpeg.fetchFile;
     toBlobURL = window.FFmpeg.toBlobURL;
     ffmpeg = new FFmpeg();
-    console.log('✅ FFmpeg 库已加载');
+
+    console.log('✅ FFmpeg 库已成功初始化');
     console.log('FFmpeg 实例:', ffmpeg);
+
   } catch (err) {
     console.error('❌ FFmpeg 初始化失败:', err);
-    setTimeout(initFFmpeg, 500);
   }
 }
 
-// 延迟初始化，确保脚本已加载
-setTimeout(initFFmpeg, 500);
+// 立即开始加载
+initFFmpeg();
 
 // ── 等待 DOM 加载完成 ──────────────────────────────────────────────────────────
 let dropZone, fileInput, btnPick, fileInfo, fileNameEl, fileSizeEl, btnClear;
