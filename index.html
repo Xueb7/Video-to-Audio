@@ -339,32 +339,45 @@ function loadFFmpegLibrary() {
   return new Promise((resolve, reject) => {
     // 尝试多个 CDN
     const cdnUrls = [
-      'https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.min.js',
-      'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.min.js'
+      'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.min.js',
+      'https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.min.js'
     ];
 
     let currentIndex = 0;
+    const timeout = 30000; // 30 秒超时
 
     function tryLoadCDN() {
       if (currentIndex >= cdnUrls.length) {
-        reject(new Error('所有 CDN 都无法加载'));
+        const msg = '❌ 所有 CDN 都无法加载。可能是网络问题或地区限制。';
+        console.error(msg);
+        reject(new Error(msg));
         return;
       }
 
       const url = cdnUrls[currentIndex];
-      console.log(`尝试从 CDN 加载: ${url}`);
+      console.log(`📥 尝试从 CDN 加载 (${currentIndex + 1}/${cdnUrls.length}): ${url}`);
 
       const script = document.createElement('script');
       script.src = url;
+
+      const timeoutId = setTimeout(() => {
+        console.log(`⏱️ 超时: ${url}`);
+        script.onerror?.();
+      }, timeout);
+
       script.onerror = () => {
-        console.log(`❌ 加载失败: ${url}`);
+        clearTimeout(timeoutId);
+        console.log(`❌ 加载失败或超时: ${url}`);
         currentIndex++;
         tryLoadCDN();
       };
+
       script.onload = () => {
+        clearTimeout(timeoutId);
         console.log(`✅ 加载成功: ${url}`);
         resolve();
       };
+
       document.head.appendChild(script);
     }
 
