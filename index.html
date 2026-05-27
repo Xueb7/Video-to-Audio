@@ -325,8 +325,21 @@
 <footer>基于 FFmpeg.wasm · 文件仅在您的浏览器内处理</footer>
 
 <script type="module">
-import { FFmpeg } from 'https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/esm/ffmpeg.js';
-import { fetchFile, toBlobURL } from 'https://unpkg.com/@ffmpeg/util@0.12.1/dist/esm/index.js';
+let FFmpeg, fetchFile, toBlobURL;
+
+(async () => {
+  try {
+    const ffmpegModule = await import('https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/esm/ffmpeg.js');
+    const utilModule = await import('https://unpkg.com/@ffmpeg/util@0.12.1/dist/esm/index.js');
+    FFmpeg = ffmpegModule.FFmpeg;
+    fetchFile = utilModule.fetchFile;
+    toBlobURL = utilModule.toBlobURL;
+    console.log('FFmpeg modules loaded successfully');
+  } catch (err) {
+    console.error('Failed to load FFmpeg modules:', err);
+  }
+})();
+
 
 // ── DOM refs ──────────────────────────────────────────────────────────────────
 const dropZone      = document.getElementById('dropZone');
