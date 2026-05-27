@@ -271,7 +271,7 @@
     <p>或点击按钮从本地选择</p>
     <button class="btn-pick" type="button" onclick="document.getElementById('fileInput').click()">选择文件</button>
   </div>
-  <input type="file" id="fileInput" accept="video/mp4,video/x-matroska,video/avi,video/quicktime,video/webm,.mp4,.mkv,.avi,.mov,.webm">
+  <input type="file" id="fileInput" accept="video/*">
 
   <!-- File Info -->
   <div class="file-info" id="fileInfo">
@@ -355,9 +355,16 @@ const btnDownload   = document.getElementById('btnDownload');
 const statusEl      = document.getElementById('status');
 
 // ── File selection ─────────────────────────────────────────────────────────────
+console.log('fileInput element:', fileInput);
 fileInput.addEventListener('change', e => {
+  console.log('✅ 文件选择事件触发！');
   const f = e.target.files[0];
-  if (f) setFile(f);
+  console.log('选中的文件:', f);
+  if (f) {
+    setFile(f);
+  } else {
+    console.log('❌ 没有选中文件');
+  }
   fileInput.value = '';
 });
 
