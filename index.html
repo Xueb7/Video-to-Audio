@@ -351,53 +351,68 @@ function initFFmpeg() {
 
 initFFmpeg();
 
-// ── DOM refs ──────────────────────────────────────────────────────────────────
-const dropZone      = document.getElementById('dropZone');
-const fileInput     = document.getElementById('fileInput');
-const btnPick       = document.getElementById('btnPick');
-const fileInfo      = document.getElementById('fileInfo');
-const fileNameEl    = document.getElementById('fileName');
-const fileSizeEl    = document.getElementById('fileSize');
-const btnClear      = document.getElementById('btnClear');
-const loadingFFmpeg = document.getElementById('loadingFFmpeg');
-const progressWrap  = document.getElementById('progressWrap');
-const progressBar   = document.getElementById('progressBar');
-const progressPct   = document.getElementById('progressPct');
-const logLine       = document.getElementById('logLine');
-const btnConvert    = document.getElementById('btnConvert');
-const btnDownload   = document.getElementById('btnDownload');
-const statusEl      = document.getElementById('status');
+// ── 等待 DOM 加载完成 ──────────────────────────────────────────────────────────
+let dropZone, fileInput, btnPick, fileInfo, fileNameEl, fileSizeEl, btnClear;
+let loadingFFmpeg, progressWrap, progressBar, progressPct, logLine;
+let btnConvert, btnDownload, statusEl;
 
-// ── File selection ─────────────────────────────────────────────────────────────
-console.log('fileInput element:', fileInput);
-fileInput.addEventListener('change', e => {
-  console.log('✅ 文件选择事件触发！');
-  const f = e.target.files[0];
-  console.log('选中的文件:', f);
-  if (f) {
-    setFile(f);
-  } else {
-    console.log('❌ 没有选中文件');
-  }
-  fileInput.value = '';
-});
+function setupDOM() {
+  dropZone      = document.getElementById('dropZone');
+  fileInput     = document.getElementById('fileInput');
+  btnPick       = document.getElementById('btnPick');
+  fileInfo      = document.getElementById('fileInfo');
+  fileNameEl    = document.getElementById('fileName');
+  fileSizeEl    = document.getElementById('fileSize');
+  btnClear      = document.getElementById('btnClear');
+  loadingFFmpeg = document.getElementById('loadingFFmpeg');
+  progressWrap  = document.getElementById('progressWrap');
+  progressBar   = document.getElementById('progressBar');
+  progressPct   = document.getElementById('progressPct');
+  logLine       = document.getElementById('logLine');
+  btnConvert    = document.getElementById('btnConvert');
+  btnDownload   = document.getElementById('btnDownload');
+  statusEl      = document.getElementById('status');
 
-btnClear.addEventListener('click', () => {
-  resetState();
-});
+  console.log('✅ DOM 已加载');
+  console.log('fileInput:', fileInput);
 
-// ── Drag & drop ───────────────────────────────────────────────────────────────
-dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('over'); });
-dropZone.addEventListener('dragleave', () => dropZone.classList.remove('over'));
-dropZone.addEventListener('drop', e => {
-  e.preventDefault();
-  dropZone.classList.remove('over');
-  const f = e.dataTransfer.files[0];
-  if (f) setFile(f);
-});
+  // ── File selection ─────────────────────────────────────────────────────────────
+  fileInput.addEventListener('change', e => {
+    console.log('✅ 文件选择事件触发！');
+    const f = e.target.files[0];
+    console.log('选中的文件:', f);
+    if (f) {
+      setFile(f);
+    } else {
+      console.log('❌ 没有选中文件');
+    }
+    fileInput.value = '';
+  });
 
-// ── Convert button ─────────────────────────────────────────────────────────────
-btnConvert.addEventListener('click', runConvert);
+  btnClear.addEventListener('click', () => {
+    resetState();
+  });
+
+  // ── Drag & drop ───────────────────────────────────────────────────────────────
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('over');
+    const f = e.dataTransfer.files[0];
+    if (f) setFile(f);
+  });
+
+  // ── Convert button ─────────────────────────────────────────────────────────────
+  btnConvert.addEventListener('click', runConvert);
+}
+
+// DOM 加载完成后执行
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', setupDOM);
+} else {
+  setupDOM();
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function setFile(file) {
