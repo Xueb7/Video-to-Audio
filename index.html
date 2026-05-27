@@ -465,28 +465,52 @@ async function ensureFFmpeg() {
   if (ffmpegLoaded) return;
 
   loadingFFmpeg.classList.add('show');
+  setStatus('📥 正在下载 FFmpeg 核心文件…（约 30-50 MB，可能需要 30 秒以上）');
+  setProgress(10);
 
   const BASE = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm';
+
   ffmpeg.on('log', ({ message }) => {
     logLine.textContent = message;
+    console.log('[FFmpeg]', message);
   });
+
   ffmpeg.on('progress', ({ progress, time }) => {
     const pct = Math.max(1, Math.min(99, Math.round(progress * 100)));
     setProgress(pct);
   });
 
   try {
+    console.log('📥 开始下载 ffmpeg-core.js...');
+    setStatus('📥 正在下载 ffmpeg-core.js...');
+    const coreURL = await toBlobURL(`${BASE}/ffmpeg-core.js`, 'text/javascript');
+    console.log('✅ ffmpeg-core.js 下载完成');
+
+    console.log('📥 开始下载 ffmpeg-core.wasm...');
+    setStatus('📥 正在下载 ffmpeg-core.wasm（最大的文件，请耐心等待）...');
+    const wasmURL = await toBlobURL(`${BASE}/ffmpeg-core.wasm`, 'application/wasm');
+    console.log('✅ ffmpeg-core.wasm 下载完成');
+
+    console.log('⚙️ 正在初始化 FFmpeg...');
+    setStatus('⚙️ 正在初始化 FFmpeg...');
     await ffmpeg.load({
-      coreURL: await toBlobURL(`${BASE}/ffmpeg-core.js`, 'text/javascript'),
-      wasmURL: await toBlobURL(`${BASE}/ffmpeg-core.wasm`, 'application/wasm'),
+      coreURL,
+      wasmURL,
     });
+
     ffmpegLoaded = true;
-    console.log('✅ FFmpeg loaded successfully');
+    console.log('✅ FFmpeg 已完全加载');
+    setStatus('✅ FFmpeg 加载完成！');
+    setProgress(100);
+
   } catch (err) {
-    console.error('❌ Failed to load FFmpeg:', err);
+    console.error('❌ FFmpeg 加载失败:', err);
+    setStatus('❌ FFmpeg 加载失败：' + err.message, 'err');
     throw err;
   } finally {
-    loadingFFmpeg.classList.remove('show');
+    setTimeout(() => {
+      loadingFFmpeg.classList.remove('show');
+    }, 1000);
   }
 }
 
