@@ -329,14 +329,14 @@ let FFmpeg, fetchFile, toBlobURL;
 
 (async () => {
   try {
-    const ffmpegModule = await import('https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/esm/ffmpeg.js');
-    const utilModule = await import('https://unpkg.com/@ffmpeg/util@0.12.1/dist/esm/index.js');
+    const ffmpegModule = await import('https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/+esm');
+    const utilModule = await import('https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/+esm');
     FFmpeg = ffmpegModule.FFmpeg;
     fetchFile = utilModule.fetchFile;
     toBlobURL = utilModule.toBlobURL;
-    console.log('FFmpeg modules loaded successfully');
+    console.log('✅ FFmpeg modules loaded successfully');
   } catch (err) {
-    console.error('Failed to load FFmpeg modules:', err);
+    console.error('❌ Failed to load FFmpeg modules:', err);
   }
 })();
 
@@ -438,7 +438,7 @@ async function ensureFFmpeg() {
 
   loadingFFmpeg.classList.add('show');
 
-  const BASE = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm';
+  const BASE = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm';
   ffmpeg.on('log', ({ message }) => {
     logLine.textContent = message;
   });
