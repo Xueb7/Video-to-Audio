@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "mp4转mp3",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "3456", "--directory", "C:\\Users\\RickHsueh\\Desktop\\西科技高新\\mp4转mp3"],
+      "port": 3456
+    }
+  ]
+}
