@@ -345,8 +345,9 @@ function initFFmpeg() {
   FFmpeg = window.FFmpeg.FFmpeg;
   fetchFile = window.FFmpeg.fetchFile;
   toBlobURL = window.FFmpeg.toBlobURL;
-  ffmpeg = new FFmpeg();
+  ffmpeg = new window.FFmpeg.FFmpeg();
   console.log('✅ FFmpeg 库已加载');
+  console.log('FFmpeg 实例:', ffmpeg);
 }
 
 initFFmpeg();
