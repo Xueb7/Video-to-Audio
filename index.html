@@ -326,8 +326,7 @@
 
 <footer>基于 FFmpeg.wasm · 文件仅在您的浏览器内处理</footer>
 
-<script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/ffmpeg.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/util.min.js"></script>
+<script async src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.min.js"></script>
 <script>
 let FFmpeg, fetchFile, toBlobURL, ffmpeg;
 let ffmpegLoaded = false;
@@ -336,21 +335,28 @@ let outputURL     = null;
 
 // 等待 FFmpeg 库加载完成
 function initFFmpeg() {
-  if (typeof window.FFmpeg === 'undefined') {
+  // 检查全局的 FFmpeg 对象
+  if (typeof FFmpeg === 'undefined' || !window.FFmpeg) {
     console.log('⏳ 等待 FFmpeg 库加载...');
-    setTimeout(initFFmpeg, 100);
+    setTimeout(initFFmpeg, 200);
     return;
   }
 
-  FFmpeg = window.FFmpeg.FFmpeg;
-  fetchFile = window.FFmpeg.fetchFile;
-  toBlobURL = window.FFmpeg.toBlobURL;
-  ffmpeg = new window.FFmpeg.FFmpeg();
-  console.log('✅ FFmpeg 库已加载');
-  console.log('FFmpeg 实例:', ffmpeg);
+  try {
+    FFmpeg = window.FFmpeg.FFmpeg;
+    fetchFile = window.FFmpeg.fetchFile;
+    toBlobURL = window.FFmpeg.toBlobURL;
+    ffmpeg = new FFmpeg();
+    console.log('✅ FFmpeg 库已加载');
+    console.log('FFmpeg 实例:', ffmpeg);
+  } catch (err) {
+    console.error('❌ FFmpeg 初始化失败:', err);
+    setTimeout(initFFmpeg, 500);
+  }
 }
 
-initFFmpeg();
+// 延迟初始化，确保脚本已加载
+setTimeout(initFFmpeg, 500);
 
 // ── 等待 DOM 加载完成 ──────────────────────────────────────────────────────────
 let dropZone, fileInput, btnPick, fileInfo, fileNameEl, fileSizeEl, btnClear;
