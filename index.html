@@ -150,16 +150,18 @@
     .progress-pct { font-variant-numeric: tabular-nums; font-weight: 600; }
 
     .progress-track {
-      height: 7px; background: rgba(255,255,255,0.07);
-      border-radius: 4px; overflow: hidden;
+      height: 12px; background: rgba(255,255,255,0.07);
+      border-radius: 8px; overflow: hidden;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
     }
     .progress-bar {
       height: 100%;
       background: linear-gradient(90deg, #7c3aed, #60a5fa);
-      border-radius: 4px;
+      border-radius: 8px;
       width: 0%;
-      transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       position: relative;
+      box-shadow: 0 0 15px rgba(124, 58, 237, 0.6);
     }
     .progress-bar::after {
       content: '';
@@ -383,11 +385,14 @@ function setFile(file) {
   fileSizeEl.textContent = formatSize(file.size);
   fileInfo.classList.add('show');
   btnConvert.classList.add('show');
+  btnConvert.disabled = false;
+  btnConvert.textContent = '⚡ 开始转换';
   btnDownload.classList.remove('show');
   progressWrap.classList.remove('show');
-  setStatus('');
+  setStatus('✅ 文件已选择，点击"开始转换"按钮开始转换');
   setProgress(0);
   if (outputURL) { URL.revokeObjectURL(outputURL); outputURL = null; }
+  console.log('✅ 文件已选择:', file.name, formatSize(file.size));
 }
 
 function resetState() {
@@ -450,25 +455,38 @@ async function ensureFFmpeg() {
 
 // ── Run conversion ─────────────────────────────────────────────────────────────
 async function runConvert() {
-  if (!selectedFile) return;
+  if (!selectedFile) {
+    setStatus('❌ 请先选择文件', 'err');
+    return;
+  }
 
+  console.log('🚀 开始转换:', selectedFile.name);
   btnConvert.disabled = true;
   btnConvert.textContent = '⏳ 转换中…';
   btnDownload.classList.remove('show');
   progressWrap.classList.add('show');
-  setStatus('正在准备…');
-  setProgress(0);
+  setStatus('⏳ 正在准备…（可能需要等待 10-20 秒加载 FFmpeg）');
+  setProgress(5);
 
   try {
+    console.log('📥 准备加载 FFmpeg...');
+    setStatus('📥 正在加载 FFmpeg 引擎…（第一次使用需要时间）');
     await ensureFFmpeg();
-    setStatus('正在读取文件…');
-    setProgress(2);
+    console.log('✅ FFmpeg 已加载');
+
+    setStatus('📤 正在上传文件…');
+    setProgress(20);
+    console.log('📤 开始上传文件...');
 
     const INPUT  = 'input_video';
     const OUTPUT = 'output.mp3';
 
     await ffmpeg.writeFile(INPUT, await fetchFile(selectedFile));
-    setStatus('转换中，请稍候…');
+    console.log('✅ 文件已上传到处理器');
+
+    setStatus('🔄 正在转换音频…（可能需要 1-5 分钟）');
+    setProgress(40);
+    console.log('🔄 开始转换...');
 
     // Extract audio as MP3
     await ffmpeg.exec([
@@ -478,6 +496,11 @@ async function runConvert() {
       '-q:a', '2',
       OUTPUT
     ]);
+
+    console.log('✅ 转换完成');
+
+    setStatus('💾 正在保存文件…');
+    setProgress(80);
 
     const data = await ffmpeg.readFile(OUTPUT);
     const blob = new Blob([data.buffer], { type: 'audio/mpeg' });
@@ -490,14 +513,16 @@ async function runConvert() {
     btnDownload.classList.add('show');
 
     setProgress(100);
-    setStatus('✅ 转换成功！点击下载按钮获取 MP3', 'ok');
+    const fileSize = formatSize(blob.size);
+    setStatus(`✅ 转换成功！(${fileSize}) 点击下面的绿色按钮下载 MP3`, 'ok');
+    console.log('✅ 完成！输出文件大小:', fileSize);
 
     await ffmpeg.deleteFile(INPUT).catch(() => {});
     await ffmpeg.deleteFile(OUTPUT).catch(() => {});
 
   } catch (err) {
     console.error('❌ 转换错误:', err);
-    setStatus('❌ 转换失败：' + err.message, 'err');
+    setStatus('❌ 转换失败：' + (err.message || '未知错误'), 'err');
     setProgress(0);
   } finally {
     btnConvert.disabled  = false;
